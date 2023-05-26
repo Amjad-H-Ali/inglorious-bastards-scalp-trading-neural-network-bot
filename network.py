@@ -39,7 +39,22 @@ n_quarter = n_half // 2
 
 test_set = [(x, y) for x, y in zip(netinput[:n_half], netoutput[:n_half])]
 
+print(f'Number of 1s in test set: {sum(y[1] for x, y in test_set)}')
+
 train_set = [(x, y) for x, y in zip(netinput[n_half:], netoutput[n_half:])]
+
+train_set_filtered_1 = [(x,y) for x, y in train_set if y[1] == 1]
+
+print(f'Length of train_set_filtered_1: {len(train_set_filtered_1)}')
+
+train_set_filtered_0 = [(x,y) for i, (x, y) in enumerate(train_set) if y[0] == 1 and i < len(train_set_filtered_1)]
+
+print(f'Length of train_set_filtered_0: {len(train_set_filtered_0)}')
+
+train_set_filtered = train_set_filtered_0+train_set_filtered_1
+
+print(f'Length of train_set_filtered: {len(train_set_filtered)}')
+
 
 # Split your training data into two halves
 test_set_1 = test_set[:n_quarter]
@@ -51,7 +66,6 @@ test_set_1_filtered = [(x, y) for x, y in test_set_1 if y[1] == 1]
 # Filter the second half of your testing data to only include rows where the second value in the tuple is 1
 test_set_2_filtered = [(x, y) for x, y in test_set_2 if y[1] == 1]
 
-print(len(test_set_1_filtered), len(test_set_2_filtered))
 
 
 # data = np.array(pd.read_csv('train.csv'))
@@ -186,6 +200,15 @@ class Network(object):
         neuron in the final layer has the highest activation."""
         test_results = [(np.argmax(self.feedforward(x)), np.argmax(y))
                         for (x, y) in test_data]
+        
+        mispredict_0 = sum(int(x==0 and y ==1) for (x,y) in test_results)
+        mispredict_1 = sum(int(x==1 and y ==0) for (x,y) in test_results)
+        predict_1 = sum(int(x==1 and y ==1) for (x,y) in test_results)
+
+        print(f'mispredict 0: {mispredict_0}')
+        print(f'mispredict 1: {mispredict_1}')
+        print(f'predict 1: {predict_1}')
+
         return sum(int(x == y) for (x, y) in test_results)
 
     def cost_derivative(self, output_activations, y):
@@ -205,8 +228,8 @@ def sigmoid_prime(z):
 
 
 
-net = Network([40,2,2])
-net.SGD(test_set_1, 30, 10, 3.0, test_data=test_set_2_filtered)
+net = Network([40,10,2])
+net.SGD(train_set_filtered, 30, 10, 3.0, test_data=test_set)
 
 
 
